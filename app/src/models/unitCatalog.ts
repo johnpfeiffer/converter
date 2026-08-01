@@ -13,7 +13,6 @@ export type ConversionCategory = {
   summary: string
   units: readonly UnitDefinition[]
   defaultInputUnit: string
-  defaultOutputUnit: string
   allowNegative: boolean
 }
 
@@ -38,7 +37,6 @@ export const conversionCategories: readonly ConversionCategory[] = [
     title: 'Data size',
     summary: 'Bytes and decimal storage units',
     defaultInputUnit: 'byte',
-    defaultOutputUnit: 'kilobyte',
     allowNegative: false,
     units: [
       scaledUnit('byte', 'Bytes', 'B', 1),
@@ -55,7 +53,6 @@ export const conversionCategories: readonly ConversionCategory[] = [
     title: 'Temperature',
     summary: 'Fahrenheit, Celsius, and Kelvin',
     defaultInputUnit: 'fahrenheit',
-    defaultOutputUnit: 'celsius',
     allowNegative: true,
     units: [
       {
@@ -81,7 +78,6 @@ export const conversionCategories: readonly ConversionCategory[] = [
     title: 'Length',
     summary: 'Imperial and metric distance units',
     defaultInputUnit: 'inch',
-    defaultOutputUnit: 'foot',
     allowNegative: true,
     units: [
       scaledUnit('inch', 'Inches', 'in', 0.0254),

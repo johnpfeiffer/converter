@@ -10,9 +10,9 @@ The MVP is a browser-based React application with three independently collapsibl
 conversion sections: Data size, Temperature, and Length. Milestones 2 and 3 are
 out of scope.
 
-Each section has one input value and unit on the left and one calculated output
-value and unit on the right. A centered swap control exchanges the input and
-output units and uses the current result as the new input.
+Each section has one input value and unit on the left and all calculated output
+values on the right. The current input unit is omitted from the output list. A
+swap control above each output promotes that output unit and value to the input.
 
 ## Conversion Rules
 
@@ -21,18 +21,19 @@ output units and uses the current result as the new input.
 - Standard temperature units are Fahrenheit and Celsius. Kelvin is advanced.
 - Standard length units are Inches, Feet, Yards, and Miles. Advanced units are
   Centimeters, Meters, and Kilometers.
-- Every available unit in a section can be selected as either input or output.
+- Every visible unit in a section can be selected as the input. Every other
+  visible unit is calculated simultaneously as an output.
 - Calculations retain JavaScript numeric precision. Display values are compacted
   to at most 12 significant digits.
 
 ## Interaction Rules
 
 - All sections begin collapsed and can be expanded independently.
-- Advanced units begin hidden. Enabling advanced mode adds them to both unit
-  selectors and immediately calculates with the current value.
-- Disabling advanced mode while an advanced unit is selected resets that section
-  to its standard default unit pair.
-- Results update 150 ms after input or selection changes.
+- Advanced units begin hidden. Enabling advanced mode adds them to the input
+  selector and output list, immediately calculating the additional results.
+- Disabling advanced mode while an advanced unit is the input converts its value
+  to the section's standard default input unit before hiding advanced units.
+- Results update 150 ms after input changes and immediately after unit changes.
 - Empty input produces an empty output. Non-numeric input produces an error.
 - Data size values must be non-negative.
 - The existing React Router structure and both `/` and `/:app` entry paths remain.

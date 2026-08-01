@@ -11,6 +11,7 @@ import {
   Stack,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { useId } from 'react'
@@ -24,9 +25,8 @@ type ConverterSectionProps = {
 export function ConverterSection({ category }: ConverterSectionProps) {
   const controller = useConverter(category)
   const inputUnitLabelId = useId()
-  const outputUnitLabelId = useId()
-  const output = controller.result.status === 'success' ? controller.result.formatted : ''
-  const error = controller.result.status === 'error' ? controller.result.message : ' '
+  const errorResult = controller.results.find(({ result }) => result.status === 'error')
+  const error = errorResult?.result.status === 'error' ? errorResult.result.message : ' '
 
   return (
     <Accordion>
@@ -43,13 +43,16 @@ export function ConverterSection({ category }: ConverterSectionProps) {
       <AccordionDetails>
         <Stack spacing={2}>
           <Stack
-            alignItems="center"
+            alignItems="flex-start"
             direction={{ xs: 'column', sm: 'row' }}
-            spacing={2}
+            spacing={{ xs: 3, sm: 4 }}
           >
-            <Stack spacing={1.5} sx={{ width: '100%' }}>
+            <Stack spacing={1.5} sx={{ flex: '1 1 0', width: '100%' }}>
+              <Typography component="h3" variant="subtitle1">
+                Input
+              </Typography>
               <TextField
-                error={controller.result.status === 'error'}
+                error={Boolean(errorResult)}
                 helperText={error}
                 label="Value"
                 onChange={(event) => controller.setRawValue(event.target.value)}
@@ -73,32 +76,29 @@ export function ConverterSection({ category }: ConverterSectionProps) {
               </FormControl>
             </Stack>
 
-            <IconButton aria-label="Swap input and output" onClick={controller.swap}>
-              <span aria-hidden="true">⇄</span>
-            </IconButton>
-
-            <Stack spacing={1.5} sx={{ width: '100%' }}>
-              <TextField
-                helperText=" "
-                label="Result"
-                slotProps={{ input: { readOnly: true } }}
-                value={output}
-              />
-              <FormControl fullWidth>
-                <InputLabel id={outputUnitLabelId}>Output unit</InputLabel>
-                <Select
-                  label="Output unit"
-                  labelId={outputUnitLabelId}
-                  onChange={(event) => controller.setOutputUnitId(event.target.value)}
-                  value={controller.outputUnitId}
-                >
-                  {controller.availableUnits.map((unit) => (
-                    <MenuItem key={unit.id} value={unit.id}>
-                      {unit.label} ({unit.symbol})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            <Stack spacing={1.5} sx={{ flex: '1 1 0', width: '100%' }}>
+              <Typography component="h3" variant="subtitle1">
+                Results
+              </Typography>
+              {controller.results.map(({ result, unit }) => (
+                <Stack alignItems="center" key={unit.id} spacing={0.5}>
+                  <Tooltip title={`Use ${unit.label} as input`}>
+                    <IconButton
+                      aria-label={`Use ${unit.label} as input`}
+                      onClick={() => controller.swap(unit.id)}
+                      size="small"
+                    >
+                      <span aria-hidden="true">⇄</span>
+                    </IconButton>
+                  </Tooltip>
+                  <TextField
+                    fullWidth
+                    label={`${unit.label} (${unit.symbol})`}
+                    slotProps={{ input: { readOnly: true } }}
+                    value={result.status === 'success' ? result.formatted : ''}
+                  />
+                </Stack>
+              ))}
             </Stack>
           </Stack>
 

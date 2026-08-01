@@ -2,6 +2,7 @@ import { Box, Container, CssBaseline, Stack, ThemeProvider, Typography, createTh
 import { RouterProvider, createBrowserRouter, Outlet, useParams } from 'react-router-dom'
 import { conversionCategories } from './models/unitCatalog'
 import { ConverterSection } from './views/ConverterSection'
+import { TimeZoneSection } from './views/TimeZoneSection'
 
 export type AppContext = { app: string }
 
@@ -25,6 +26,7 @@ function HomePage() {
             {conversionCategories.map((category) => (
               <ConverterSection category={category} key={category.id} />
             ))}
+            <TimeZoneSection />
           </Stack>
         </Stack>
       </Box>

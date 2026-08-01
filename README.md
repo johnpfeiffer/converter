@@ -1,15 +1,16 @@
 # Converter
 
-A focused browser utility for common data-size, temperature, and length
-conversions. The MVP uses Material UI and keeps each converter in a collapsible
-section with optional advanced units.
+A focused browser utility for common data-size, temperature, length, and timezone
+conversions. It uses Material UI and keeps each converter in a collapsible section.
 
 ## Features
 
 - Decimal data sizes from Bytes through EB
 - Fahrenheit, Celsius, and Kelvin
 - Imperial and metric lengths
-- Debounced live results and one-click direction swapping
+- Simultaneous outputs with debounced updates and per-result swapping
+- Browser-detected source timezone with an ordered UTC-offset picker
+- Independent Standard/Daylight Saving controls and ±1 hour adjustments
 - Responsive Material UI layout at both `/` and `/:app`
 
 ## Local development

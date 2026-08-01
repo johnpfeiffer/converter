@@ -15,18 +15,27 @@ flowchart LR
     Controller --> Model[Conversion model]
     Model --> Catalog[Unit catalog]
     Controller -->|state and result| View
+    Page --> TimeView[TimeZoneSection view]
+    TimeView --> TimeController[useTimeZoneConverter controller]
+    TimeController --> TimeModel[Timezone model]
+    TimeModel --> TimeCatalog[Ordered timezone JSON]
 ```
 
 - `models/` owns the unit catalog, parsing, validation, conversion, and result
   formatting. It has no React or Material UI dependency.
-- `controllers/` owns per-section input state, the 150 ms debounce, advanced-unit
-  visibility, and swapping behavior.
+- `controllers/` owns per-section input state, the 150 ms debounce, the derived
+  result collection, advanced-unit visibility, and per-result promotion.
 - `views/` owns Material UI presentation and delegates all conversion decisions.
 - `App.tsx` preserves the scaffold's `/` and `/:app` routes so later milestones
   can add route-specific behavior without replacing the application shell.
+- The timezone domain uses a separate controller and model because date rollover,
+  two independently configured endpoints, and fixed UTC offsets do not fit the
+  unit-conversion abstraction.
 
 All categories use a canonical base unit. Scaled units convert to and from that
-base; temperature uses affine conversion functions because it has an offset.
+base; temperature uses affine conversion functions because it has an offset. The
+controller calculates every visible unit other than the selected input, so one
+source produces a consistent result list without duplicating conversion logic.
 
 ## User journey
 
@@ -34,28 +43,48 @@ base; temperature uses affine conversion functions because it has an offset.
 flowchart TD
     Start[Open converter] --> Summary[See three collapsed summaries]
     Summary --> Expand[Expand a section]
-    Expand --> Enter[Enter a value and choose units]
+    Expand --> Enter[Enter one value and choose its unit]
     Enter --> Debounce[Wait 150 ms]
-    Debounce --> Result[Read calculated result]
+    Debounce --> Result[Read all standard-unit results]
     Expand --> Advanced{Need advanced units?}
-    Advanced -->|Yes| Reveal[Enable advanced units]
-    Reveal --> Enter
-    Result --> Swap{Swap direction?}
-    Swap -->|Yes| Carry[Carry result to input and exchange units]
+    Advanced -->|Yes| Reveal[Reveal and calculate advanced results]
+    Reveal --> Result
+    Result --> Promote{Use a result as input?}
+    Promote -->|Yes| Carry[Promote its unit and value to the source]
     Carry --> Result
 ```
 
 ## Extension points
 
-Milestone 2 timezone conversion can add a category-specific model and view while
-reusing the routed page and collapsible-section pattern. Milestone 3's calculator
-has history state and should remain a separate domain model rather than being
-forced into the unit-conversion abstraction.
+Milestone 3's calculator has history state and should remain a separate domain
+model rather than being forced into the unit- or timezone-conversion abstractions.
+
+## Timezone journey
+
+```mermaid
+flowchart TD
+    Open[Expand Time zones] --> Detect[Use browser timezone as source]
+    Detect --> Pick[Choose source and destination by ordered UTC offset]
+    Pick --> Enter[Enter local date and time]
+    Enter --> Adjust[Optionally adjust by plus or minus one hour]
+    Adjust --> Mode[Choose Standard or Daylight Saving per endpoint]
+    Mode --> Read[Read converted date, time, and day rollover]
+    Read --> Swap[Optionally swap source and destination]
+    Swap --> Read
+```
+
+The picker is offset-first rather than alphabetic so users can scan the direction
+and magnitude of a conversion. Recognizable region labels remain in each option.
+Daylight Saving controls are independent because source and destination may enter
+or leave daylight time on different dates. The catalog is deterministic and
+offline; it intentionally does not claim historical IANA-rule accuracy.
 
 ## Validation and operational notes
 
-Vitest model tests are table-driven. React Testing Library verifies advanced-unit
-disclosure, debounced live calculation, and swapping through accessible controls.
+Vitest model tests are table-driven. React Testing Library verifies simultaneous
+standard outputs, advanced-result disclosure, debounced live calculation,
+per-result promotion, timezone selection, Standard Time defaults, and hour
+adjustments through accessible controls.
 `npm run build` performs strict TypeScript compilation before creating the Vite
 bundle.
 
