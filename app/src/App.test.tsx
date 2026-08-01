@@ -3,7 +3,30 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
 
-describe('converter MVP', () => {
+describe('converter app', () => {
+  it('provides a tool index and the standard footer without an extraneous tagline', () => {
+    render(<App />)
+
+    expect(screen.queryByText('Common conversions without the clutter.')).not.toBeInTheDocument()
+    const navigation = screen.getByRole('navigation', { name: /converter tools/i })
+    for (const tool of ['Data size', 'Temperature', 'Length', 'Time zones', 'Weight', 'Volume']) {
+      expect(within(navigation).getByRole('link', { name: tool })).toHaveAttribute(
+        'href',
+        `#${tool.toLowerCase().replaceAll(' ', '-')}`,
+      )
+    }
+
+    expect(screen.getByText(/Built by John Pfeiffer/i)).toBeInTheDocument()
+    const linkedIn = screen.getByRole('link', { name: /John Pfeiffer on LinkedIn/i })
+    const github = screen.getByRole('link', { name: /Source code on GitHub/i })
+    expect(linkedIn).toHaveAttribute('href', 'https://www.linkedin.com/in/foupfeiffer')
+    expect(github).toHaveAttribute('href', 'https://github.com/johnpfeiffer/converter')
+    for (const externalLink of [linkedIn, github]) {
+      expect(externalLink).toHaveAttribute('target', '_blank')
+      expect(externalLink).toHaveAttribute('rel', 'noopener noreferrer')
+    }
+  })
+
   it('calculates all standard outputs and reveals advanced results', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -88,5 +111,23 @@ describe('converter MVP', () => {
       within(accordion).getByRole('switch', { name: /source daylight saving time/i }),
     )
     expect(await within(accordion).findByDisplayValue('2026-01-15T20:00')).toBeInTheDocument()
+  })
+
+  it('calculates common weights and reveals advanced sizes', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const accordion = screen
+      .getByRole('button', { name: /weight/i })
+      .closest<HTMLElement>('.MuiAccordion-root')!
+    await user.click(within(accordion).getByRole('button', { name: /weight/i }))
+
+    expect(within(accordion).getByLabelText('Ounces (oz)')).toBeInTheDocument()
+    expect(within(accordion).getByLabelText('Grams (g)')).toBeInTheDocument()
+    expect(within(accordion).getByLabelText('Kilograms (kg)')).toBeInTheDocument()
+    expect(within(accordion).queryByLabelText('US short tons (ton)')).not.toBeInTheDocument()
+
+    await user.click(within(accordion).getByRole('switch', { name: /show advanced units/i }))
+    expect(within(accordion).getByLabelText('US short tons (ton)')).toBeInTheDocument()
   })
 })

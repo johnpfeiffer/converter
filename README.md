@@ -1,7 +1,8 @@
 # Converter
 
-A focused browser utility for common data-size, temperature, length, and timezone
-conversions. It uses Material UI and keeps each converter in a collapsible section.
+A focused browser utility for common data-size, temperature, length, timezone,
+weight, and volume conversions. It uses Material UI and keeps each converter in a
+collapsible section.
 
 ## Features
 
@@ -11,6 +12,9 @@ conversions. It uses Material UI and keeps each converter in a collapsible secti
 - Simultaneous outputs with debounced updates and per-result swapping
 - Browser-detected source timezone with an ordered UTC-offset picker
 - Independent Standard/Daylight Saving controls and ±1 hour adjustments
+- Imperial and metric weight conversions from ounces through metric tonnes
+- Explicit US, Imperial, and metric liquid-volume conversions
+- Compact repeating-decimal formatting and a horizontal tool index
 - Responsive Material UI layout at both `/` and `/:app`
 
 ## Local development

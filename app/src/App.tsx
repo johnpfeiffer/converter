@@ -1,5 +1,15 @@
-import { Box, Container, CssBaseline, Stack, ThemeProvider, Typography, createTheme } from '@mui/material'
+import {
+  Box,
+  Container,
+  CssBaseline,
+  Link,
+  Stack,
+  ThemeProvider,
+  Typography,
+  createTheme,
+} from '@mui/material'
 import { RouterProvider, createBrowserRouter, Outlet, useParams } from 'react-router-dom'
+import Footer from './components/Footer'
 import { conversionCategories } from './models/unitCatalog'
 import { ConverterSection } from './views/ConverterSection'
 import { TimeZoneSection } from './views/TimeZoneSection'
@@ -7,30 +17,54 @@ import { TimeZoneSection } from './views/TimeZoneSection'
 export type AppContext = { app: string }
 
 const theme = createTheme()
+const coreCategories = conversionCategories.slice(0, 3)
+const milestoneThreeCategories = conversionCategories.slice(3)
+const toolLinks = [
+  ...coreCategories.map(({ title }) => title),
+  'Time zones',
+  ...milestoneThreeCategories.map(({ title }) => title),
+]
 
 function HomePage() {
   return (
-    <Container maxWidth="md">
-      <Box component="main" sx={{ py: { xs: 3, sm: 6 } }}>
-        <Stack spacing={3}>
-          <Stack component="header" spacing={1}>
-            <Typography component="h1" variant="h3">
-              Converter
-            </Typography>
-            <Typography color="text.secondary">
-              Common conversions without the clutter.
-            </Typography>
-          </Stack>
+    <>
+      <Container maxWidth="md">
+        <Box component="main" sx={{ py: { xs: 3, sm: 6 } }}>
+          <Stack spacing={3}>
+            <Stack component="header" spacing={2}>
+              <Typography component="h1" variant="h3">
+                Converter
+              </Typography>
+              <Stack
+                aria-label="Converter tools"
+                component="nav"
+                direction="row"
+                flexWrap="wrap"
+                spacing={2}
+                useFlexGap
+              >
+                {toolLinks.map((title) => (
+                  <Link href={`#${title.toLowerCase().replaceAll(' ', '-')}`} key={title}>
+                    {title}
+                  </Link>
+                ))}
+              </Stack>
+            </Stack>
 
-          <Stack spacing={1}>
-            {conversionCategories.map((category) => (
-              <ConverterSection category={category} key={category.id} />
-            ))}
-            <TimeZoneSection />
+            <Stack spacing={1}>
+              {coreCategories.map((category) => (
+                <ConverterSection category={category} key={category.id} />
+              ))}
+              <TimeZoneSection />
+              {milestoneThreeCategories.map((category) => (
+                <ConverterSection category={category} key={category.id} />
+              ))}
+            </Stack>
           </Stack>
-        </Stack>
-      </Box>
-    </Container>
+        </Box>
+      </Container>
+      <Footer />
+    </>
   )
 }
 

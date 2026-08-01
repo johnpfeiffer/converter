@@ -31,6 +31,41 @@ export const formatResult = (value: number): string => {
     return '0'
   }
 
+  if (!Number.isFinite(value)) {
+    return value.toString()
+  }
+
+  const absoluteValue = Math.abs(value)
+  if (absoluteValue < 0.000001 || absoluteValue >= 1_000_000_000_000) {
+    return Number(value.toPrecision(12)).toString()
+  }
+
+  const sign = value < 0 ? '-' : ''
+  const [integerPart, fixedFraction = ''] = absoluteValue.toFixed(12).split('.')
+  const fraction = fixedFraction.replace(/0+$/, '')
+
+  for (let start = 0; start < fraction.length; start += 1) {
+    for (let periodLength = 1; periodLength <= 6; periodLength += 1) {
+      const pattern = fraction.slice(start, start + periodLength)
+      if (pattern.length < periodLength) break
+      if (/^0+$/.test(pattern)) continue
+
+      let repeats = 1
+      let position = start + periodLength
+      while (fraction.slice(position, position + periodLength) === pattern) {
+        repeats += 1
+        position += periodLength
+      }
+
+      const trailingNoiseLength = fraction.length - position
+      const enoughRepeats = periodLength === 1 ? repeats >= 3 : repeats >= 2
+      if (enoughRepeats && trailingNoiseLength <= 1) {
+        const compactPattern = periodLength === 1 ? pattern.repeat(2) : pattern
+        return `${sign}${integerPart}.${fraction.slice(0, start)}${compactPattern}`
+      }
+    }
+  }
+
   return Number(value.toPrecision(12)).toString()
 }
 
@@ -51,7 +86,7 @@ export const parseConversion = (
   }
 
   if (!category.allowNegative && numericValue < 0) {
-    return { status: 'error', message: 'Data size cannot be negative.' }
+    return { status: 'error', message: `${category.title} cannot be negative.` }
   }
 
   const value = convert(category, inputUnitId, outputUnitId, numericValue)

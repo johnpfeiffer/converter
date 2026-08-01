@@ -29,7 +29,7 @@ export function ConverterSection({ category }: ConverterSectionProps) {
   const error = errorResult?.result.status === 'error' ? errorResult.result.message : ' '
 
   return (
-    <Accordion>
+    <Accordion id={category.title.toLowerCase().replaceAll(' ', '-')}>
       <AccordionSummary expandIcon={<span aria-hidden="true">⌄</span>}>
         <Stack>
           <Typography component="h2" variant="h6">

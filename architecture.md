@@ -28,6 +28,8 @@ flowchart LR
 - `views/` owns Material UI presentation and delegates all conversion decisions.
 - `App.tsx` preserves the scaffold's `/` and `/:app` routes so later milestones
   can add route-specific behavior without replacing the application shell.
+- `App.tsx` also owns the horizontal tool index and milestone ordering. The shared
+  footer remains a presentation component without domain behavior.
 - The timezone domain uses a separate controller and model because date rollover,
   two independently configured endpoints, and fixed UTC offsets do not fit the
   unit-conversion abstraction.
@@ -36,12 +38,15 @@ All categories use a canonical base unit. Scaled units convert to and from that
 base; temperature uses affine conversion functions because it has an offset. The
 controller calculates every visible unit other than the selected input, so one
 source produces a consistent result list without duplicating conversion logic.
+Weight uses kilograms and volume uses liters as their canonical bases. The result
+formatter detects compact repeating patterns while retaining exact small values.
 
 ## User journey
 
 ```mermaid
 flowchart TD
-    Start[Open converter] --> Summary[See three collapsed summaries]
+    Start[Open converter] --> Index[Choose a tool from the horizontal index]
+    Index --> Summary[See its collapsed summary]
     Summary --> Expand[Expand a section]
     Expand --> Enter[Enter one value and choose its unit]
     Enter --> Debounce[Wait 150 ms]
@@ -54,9 +59,27 @@ flowchart TD
     Carry --> Result
 ```
 
+## Milestone 3 journey
+
+```mermaid
+flowchart TD
+    Choose[Choose Weight or Volume] --> Expand[Expand the section]
+    Expand --> Input[Enter one value and select its unit]
+    Input --> Common[Read all common Imperial and metric results]
+    Common --> Advanced{Need related sizes?}
+    Advanced -->|Yes| Reveal[Reveal rare or kitchen units]
+    Reveal --> Common
+    Common --> Promote[Optionally promote any result to input]
+    Promote --> Common
+```
+
+US and Imperial liquid measures are labeled separately because their gallons and
+fluid ounces have different sizes. Common cross-system results remain visible;
+advanced mode limits the longer tail of kitchen and extreme weight units.
+
 ## Extension points
 
-Milestone 3's calculator has history state and should remain a separate domain
+Milestone 4's calculator has history state and should remain a separate domain
 model rather than being forced into the unit- or timezone-conversion abstractions.
 
 ## Timezone journey
@@ -83,8 +106,9 @@ offline; it intentionally does not claim historical IANA-rule accuracy.
 
 Vitest model tests are table-driven. React Testing Library verifies simultaneous
 standard outputs, advanced-result disclosure, debounced live calculation,
-per-result promotion, timezone selection, Standard Time defaults, and hour
-adjustments through accessible controls.
+per-result promotion, timezone selection, Standard Time defaults, hour
+adjustments, tool navigation, Weight disclosure, and footer links through
+accessible controls.
 `npm run build` performs strict TypeScript compilation before creating the Vite
 bundle.
 

@@ -35,7 +35,7 @@ export function TimeZoneSection() {
         : 'Previous calendar day'
 
   return (
-    <Accordion>
+    <Accordion id="time-zones">
       <AccordionSummary expandIcon={<span aria-hidden="true">⌄</span>}>
         <Stack>
           <Typography component="h2" variant="h6">
