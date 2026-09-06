@@ -43,9 +43,9 @@ export function ConverterSection({ category }: ConverterSectionProps) {
       <AccordionDetails>
         <Stack spacing={2}>
           <Stack
-            alignItems="flex-start"
             direction={{ xs: 'column', sm: 'row' }}
             spacing={{ xs: 3, sm: 4 }}
+            sx={{ alignItems: 'flex-start' }}
           >
             <Stack spacing={1.5} sx={{ flex: '1 1 0', width: '100%' }}>
               <Typography component="h3" variant="subtitle1">
@@ -81,7 +81,7 @@ export function ConverterSection({ category }: ConverterSectionProps) {
                 Results
               </Typography>
               {controller.results.map(({ result, unit }) => (
-                <Stack alignItems="center" key={unit.id} spacing={0.5}>
+                <Stack key={unit.id} spacing={0.5} sx={{ alignItems: 'center' }}>
                   <Tooltip title={`Use ${unit.label} as input`}>
                     <IconButton
                       aria-label={`Use ${unit.label} as input`}

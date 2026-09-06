@@ -39,8 +39,8 @@ function HomePage() {
                 aria-label="Converter tools"
                 component="nav"
                 direction="row"
-                flexWrap="wrap"
                 spacing={2}
+                sx={{ flexWrap: 'wrap' }}
                 useFlexGap
               >
                 {toolLinks.map((title) => (

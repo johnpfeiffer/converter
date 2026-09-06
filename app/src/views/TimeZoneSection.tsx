@@ -47,7 +47,11 @@ export function TimeZoneSection() {
         </Stack>
       </AccordionSummary>
       <AccordionDetails>
-        <Stack alignItems="flex-start" direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={2}
+          sx={{ alignItems: 'flex-start' }}
+        >
           <Stack spacing={1.5} sx={{ flex: '1 1 0', width: '100%' }}>
             <Typography component="h3" variant="subtitle1">
               From
