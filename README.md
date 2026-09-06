@@ -19,7 +19,8 @@ collapsible section.
 
 ## Local development
 
-Node.js 20.19+ or 22.12+ is required by the Vite toolchain.
+Node.js 24.20.0 or later is required by the Vite/Vitest toolchain (see
+`app/package.json` `engines`).
 
 ```bash
 cd app
