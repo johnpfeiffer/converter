@@ -1,6 +1,6 @@
 # MVP Specification
 
-This specification is derived from `KERNEL/requirements-v1.md`, `KERNEL/DESIGN.md`,
+This specification is derived from `KERNEL/requirements-v01.md`, `KERNEL/DESIGN.md`,
 and the implementation decisions confirmed by the user. The kernel remains the
 authority if this document ever conflicts with it.
 

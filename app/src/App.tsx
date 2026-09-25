@@ -12,6 +12,7 @@ import { RouterProvider, createBrowserRouter, Outlet, useParams } from 'react-ro
 import Footer from './components/Footer'
 import { conversionCategories } from './models/unitCatalog'
 import { ConverterSection } from './views/ConverterSection'
+import { DeduplicatorSection } from './views/DeduplicatorSection'
 import { TimeZoneSection } from './views/TimeZoneSection'
 
 export type AppContext = { app: string }
@@ -20,6 +21,7 @@ const theme = createTheme()
 const coreCategories = conversionCategories.slice(0, 3)
 const milestoneThreeCategories = conversionCategories.slice(3)
 const toolLinks = [
+  'Deduplicate',
   ...coreCategories.map(({ title }) => title),
   'Time zones',
   ...milestoneThreeCategories.map(({ title }) => title),
@@ -52,6 +54,7 @@ function HomePage() {
             </Stack>
 
             <Stack spacing={1}>
+              <DeduplicatorSection />
               {coreCategories.map((category) => (
                 <ConverterSection category={category} key={category.id} />
               ))}

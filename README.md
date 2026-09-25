@@ -1,11 +1,15 @@
 # Converter
 
-A focused browser utility for common data-size, temperature, length, timezone,
-weight, and volume conversions. It uses Material UI and keeps each converter in a
-collapsible section.
+A focused browser utility for deduplicating pasted text and converting common
+data sizes, temperatures, lengths, timezones, weights, and volumes. It uses
+Material UI and keeps each tool in a collapsible section.
 
 ## Features
 
+- Exact, case-sensitive deduplication of newline-delimited text
+- Optional whitespace splitting and line sorting before deduplication
+- Lowercase and uppercase transformations for deduplicated output
+- Optional Jev semantic deduplication with a score for every line
 - Decimal data sizes from Bytes through EB
 - Fahrenheit, Celsius, and Kelvin
 - Imperial and metric lengths
@@ -29,6 +33,17 @@ npm run dev
 ```
 
 Open the local URL printed by Vite.
+
+The exact Deduplicate button works in standalone development. **Jev
+deduplicate** calls the same-origin `POST /api/decisions` gateway provided by
+the deployment monorepo. Run through that monorepo with its `DECISIONS_API_BASE`,
+`DECISIONS_API_KEY`, and `DECISIONS_MODEL` settings to use Jev. The browser sends
+no provider key or model name. Jev sees the pasted lines; use exact deduplication
+for text you do not want sent to the configured provider.
+
+Jev keeps a line when its estimated duplicate score is below 75%. Scores and
+keep/remove decisions appear below the text areas. Semantic judgments can be
+ambiguous, so review them before using the output.
 
 ## Validation
 

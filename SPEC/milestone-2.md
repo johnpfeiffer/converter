@@ -1,6 +1,6 @@
 # Milestone 2 Specification: Time Zones
 
-This specification is derived from `KERNEL/requirements-v1.md` and the user's
+This specification is derived from `KERNEL/requirements-v01.md` and the user's
 request to implement Milestone 2. The kernel remains authoritative.
 
 ## Scope

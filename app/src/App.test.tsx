@@ -1,9 +1,143 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
+afterEach(() => vi.restoreAllMocks())
+
 describe('converter app', () => {
+  it('deduplicates pasted text and offers input and output transformations', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const navigation = screen.getByRole('navigation', { name: /converter tools/i })
+    expect(within(navigation).getByRole('link', { name: 'Deduplicate' })).toHaveAttribute(
+      'href',
+      '#deduplicate',
+    )
+
+    const section = screen
+      .getByRole('button', { name: /deduplicate/i })
+      .closest<HTMLElement>('.MuiAccordion-root')!
+    expect(section.previousElementSibling).toBeNull()
+    await user.click(within(section).getByRole('button', { name: /deduplicate/i }))
+
+    const input = within(section).getByRole('textbox', { name: 'Input text' })
+    const output = within(section).getByRole('textbox', { name: 'Output text' })
+    expect(output).toHaveAttribute('readonly')
+
+    await user.type(input, 'Pear apple Pear{enter}banana apple')
+    await user.click(within(section).getByRole('button', { name: 'Split by whitespace' }))
+    expect(input).toHaveValue('Pear\napple\nPear\nbanana\napple')
+
+    await user.click(within(section).getByRole('button', { name: 'Sort lines' }))
+    expect(input).toHaveValue('Pear\nPear\napple\napple\nbanana')
+    await user.click(within(section).getByRole('button', { name: 'Deduplicate' }))
+    expect(output).toHaveValue('Pear\napple\nbanana')
+
+    await user.click(within(section).getByRole('button', { name: 'Lowercase output' }))
+    expect(output).toHaveValue('pear\napple\nbanana')
+    await user.click(within(section).getByRole('button', { name: 'Uppercase output' }))
+    expect(output).toHaveValue('PEAR\nAPPLE\nBANANA')
+
+    await user.clear(input)
+    expect(output).toHaveValue('')
+  })
+
+  it('uses one Jev Decisions request and shows semantic duplicate scores', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          answers: {
+            duplicate_line_2: { type: 'noul', noul: 0.91 },
+            duplicate_line_3: { type: 'noul', noul: 0.08 },
+            duplicate_line_4: { type: 'noul', noul: 0.96 },
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+    const user = userEvent.setup()
+    render(<App />)
+
+    const section = screen
+      .getByRole('button', { name: /deduplicate/i })
+      .closest<HTMLElement>('.MuiAccordion-root')!
+    await user.click(within(section).getByRole('button', { name: /deduplicate/i }))
+    await user.type(
+      within(section).getByRole('textbox', { name: 'Input text' }),
+      'storm{enter}stormy{enter}Engineering Manager{enter}Eng Manager{enter}storm',
+    )
+    await user.click(within(section).getByRole('button', { name: 'Jev deduplicate' }))
+
+    expect(await within(section).findByRole('list', { name: 'Jev scores' })).toBeInTheDocument()
+    expect(within(section).getByRole('textbox', { name: 'Output text' })).toHaveValue(
+      'storm\nEngineering Manager',
+    )
+    expect(within(section).getByText(/stormy.*91%.*duplicate/i)).toBeInTheDocument()
+    expect(within(section).getByText(/Eng Manager.*96%.*duplicate/i)).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, options] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/decisions')
+    expect(options).toMatchObject({ method: 'POST' })
+    const request = JSON.parse(String(options?.body))
+    expect(request).not.toHaveProperty('model')
+    expect(request.state.lines).toHaveLength(5)
+    expect(Object.keys(request.questions)).toHaveLength(3)
+  })
+
+  it('reports a Jev gateway error and keeps exact deduplication usable', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 503 }))
+    const user = userEvent.setup()
+    render(<App />)
+
+    const section = screen
+      .getByRole('button', { name: /deduplicate/i })
+      .closest<HTMLElement>('.MuiAccordion-root')!
+    await user.click(within(section).getByRole('button', { name: /deduplicate/i }))
+    await user.type(
+      within(section).getByRole('textbox', { name: 'Input text' }),
+      'storm{enter}stormy{enter}storm',
+    )
+    await user.click(within(section).getByRole('button', { name: 'Jev deduplicate' }))
+    expect(await within(section).findByRole('alert')).toHaveTextContent(/Jev.*unavailable/i)
+    expect(within(section).getByRole('textbox', { name: 'Output text' })).toHaveValue('')
+
+    await user.click(within(section).getByRole('button', { name: 'Deduplicate' }))
+    expect(within(section).getByRole('textbox', { name: 'Output text' })).toHaveValue(
+      'storm\nstormy',
+    )
+  })
+
+  it('ignores a Jev result after the input changes', async () => {
+    let resolveFetch!: (response: Response) => void
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      () => new Promise<Response>((resolve) => { resolveFetch = resolve }),
+    )
+    const user = userEvent.setup()
+    render(<App />)
+
+    const section = screen
+      .getByRole('button', { name: /deduplicate/i })
+      .closest<HTMLElement>('.MuiAccordion-root')!
+    await user.click(within(section).getByRole('button', { name: /deduplicate/i }))
+    const input = within(section).getByRole('textbox', { name: 'Input text' })
+    await user.type(input, 'storm{enter}stormy')
+    await user.click(within(section).getByRole('button', { name: 'Jev deduplicate' }))
+    expect(within(section).getByRole('status')).toBeInTheDocument()
+
+    await user.clear(input)
+    await user.type(input, 'new list')
+    await act(async () => {
+      resolveFetch(new Response(JSON.stringify({
+        answers: { duplicate_line_2: { type: 'noul', noul: 0.99 } },
+      }), { status: 200 }))
+    })
+
+    expect(within(section).getByRole('textbox', { name: 'Output text' })).toHaveValue('')
+    expect(within(section).queryByRole('list', { name: 'Jev scores' })).not.toBeInTheDocument()
+  })
+
   it('provides a tool index and the standard footer without an extraneous tagline', () => {
     render(<App />)
 

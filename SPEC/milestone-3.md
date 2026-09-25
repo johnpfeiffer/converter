@@ -1,6 +1,6 @@
 # Milestone 3 Specification: Weight and Volume
 
-This specification is derived from `KERNEL/requirements-v1.md`. The kernel
+This specification is derived from `KERNEL/requirements-v01.md`. The kernel
 remains authoritative.
 
 ## Scope

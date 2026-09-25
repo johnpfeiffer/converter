@@ -10,6 +10,13 @@ behavior and validation contracts live under `SPEC/` and `VALIDATION/`.
 flowchart LR
     Browser[Browser route] --> Router[React Router]
     Router --> Page[HomePage]
+    Page --> DedupView[DeduplicatorSection view]
+    DedupView --> DedupController[useDeduplicator controller]
+    DedupController --> DedupModel[Deduplication model]
+    DedupController --> JevModel[Jev request and response model]
+    DedupController --> Gateway[Same-origin Decisions gateway]
+    Gateway -->|structured scores| DedupController
+    DedupController -->|input and output state| DedupView
     Page --> View[ConverterSection view]
     View --> Controller[useConverter controller]
     Controller --> Model[Conversion model]
@@ -22,9 +29,11 @@ flowchart LR
 ```
 
 - `models/` owns the unit catalog, parsing, validation, conversion, and result
-  formatting. It has no React or Material UI dependency.
+  formatting, plus the pure text deduplication operations. It has no React or
+  Material UI dependency.
 - `controllers/` owns per-section input state, the 150 ms debounce, the derived
-  result collection, advanced-unit visibility, and per-result promotion.
+  result collection, advanced-unit visibility, and per-result promotion. The
+  deduplicator controller owns its separate input and output state.
 - `views/` owns Material UI presentation and delegates all conversion decisions.
 - `App.tsx` preserves the scaffold's `/` and `/:app` routes so later milestones
   can add route-specific behavior without replacing the application shell.
@@ -33,6 +42,13 @@ flowchart LR
 - The timezone domain uses a separate controller and model because date rollover,
   two independently configured endpoints, and fixed UTC offsets do not fit the
   unit-conversion abstraction.
+- The deduplicator uses exact string comparisons and preserves the first
+  occurrence order. Its optional input transformations run before the explicit
+  Deduplicate action; case controls transform only the current output.
+- Jev deduplication sends the complete list once to `/api/decisions`. The
+  browser supplies `state` and native `noul` questions, while the gateway owns
+  the provider key and model. Exact repeats are scored locally. The Jev model
+  validates every returned score before the controller updates the output.
 
 All categories use a canonical base unit. Scaled units convert to and from that
 base; temperature uses affine conversion functions because it has an offset. The
@@ -58,6 +74,46 @@ flowchart TD
     Promote -->|Yes| Carry[Promote its unit and value to the source]
     Carry --> Result
 ```
+
+## Deduplicator journey
+
+```mermaid
+flowchart TD
+    Open[Expand Deduplicate at the top] --> Paste[Paste newline-delimited text]
+    Paste --> Prepare{Prepare input?}
+    Prepare -->|Split whitespace| Split[One token per line]
+    Prepare -->|Sort lines| Sort[Lexicographically sorted lines]
+    Prepare -->|No| Run[Click Deduplicate]
+    Split --> Run
+    Sort --> Run
+    Run --> Output[Read unique lines on the right]
+    Output --> Case{Change output case?}
+    Case -->|Lowercase| Lower[Lowercase output]
+    Case -->|Uppercase| Upper[Uppercase output]
+```
+
+Blank lines are omitted, CRLF and LF are treated alike, and all other line
+whitespace is significant. Editing or transforming input clears the prior output
+until Deduplicate is clicked again.
+
+## Jev deduplication journey
+
+```mermaid
+flowchart TD
+    Paste[Paste newline-delimited text] --> Click[Click Jev deduplicate]
+    Click --> Exact[Score exact repeats locally]
+    Exact --> Batch[Send all lines and one question per distinct later line]
+    Batch --> Gateway[Decisions gateway chooses Jev]
+    Gateway --> Validate[Validate every returned score]
+    Validate --> Keep[Keep first and lines below 75% duplicate score]
+    Keep --> Review[Review output and per-line scores]
+```
+
+The request has O(n) question records and uses one network round trip. It avoids
+explicit pair requests, while the provider may still compare many line pairs
+internally. A pending request is canceled when input changes or exact
+deduplication runs. Gateway errors do not silently replace the output with an
+exact result.
 
 ## Milestone 3 journey
 
@@ -107,8 +163,8 @@ offline; it intentionally does not claim historical IANA-rule accuracy.
 Vitest model tests are table-driven. React Testing Library verifies simultaneous
 standard outputs, advanced-result disclosure, debounced live calculation,
 per-result promotion, timezone selection, Standard Time defaults, hour
-adjustments, tool navigation, Weight disclosure, and footer links through
-accessible controls.
+adjustments, tool navigation, Weight disclosure, footer links, and deduplication
+controls through accessible controls.
 `npm run build` performs strict TypeScript compilation before creating the Vite
 bundle.
 
