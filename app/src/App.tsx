@@ -9,7 +9,7 @@ import {
   createTheme,
 } from '@mui/material'
 import { RouterProvider, createBrowserRouter, Outlet, useParams } from 'react-router-dom'
-import Footer from './components/Footer'
+import { SiteFooter } from 'johnutilsjs/ui'
 import { conversionCategories } from './models/unitCatalog'
 import { ConverterSection } from './views/ConverterSection'
 import { DeduplicatorSection } from './views/DeduplicatorSection'
@@ -66,7 +66,7 @@ function HomePage() {
           </Stack>
         </Box>
       </Container>
-      <Footer />
+      <SiteFooter repo="converter" />
     </>
   )
 }
